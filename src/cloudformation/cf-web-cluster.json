@@ -1,0 +1,21 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Container Cluster",
+  "Resources": {
+    
+  },
+  "Mappings": {
+    "Constant": {
+      "EcsInstanceType": "t2.micro"
+    },
+    "EcsAmi": {
+      "us-east-1": "ami-ddc7b6b7",
+      "us-west-1": "ami-a39df1c3",
+      "us-west-2": "ami-d74357b6",
+      "eu-west-1": "ami-f1b46b82",
+      "ap-northeast-1": "ami-3077525e",
+      "ap-southeast-2": "ami-23b4eb40"
+    }
+  }
+
+}
