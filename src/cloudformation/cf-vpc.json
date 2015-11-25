@@ -11,13 +11,13 @@
         "EnableDnsHostnames": "true"
       }
     },
-    "WebSubnetAz1": {
+    "PubSubnetAz1": {
       "Type": "AWS::EC2::Subnet",
       "Properties": {
         "VpcId": {
           "Ref": "Vpc"
         },
-        "CidrBlock": "10.26.0.0/24",
+        "CidrBlock": "10.26.2.0/24",
         "AvailabilityZone": {
           "Fn::Select": [
             "0", {
@@ -29,13 +29,13 @@
         }
       }
     },
-    "WebSubnetAz2": {
+    "PubSubnetAz2": {
       "Type": "AWS::EC2::Subnet",
       "Properties": {
         "VpcId": {
           "Ref": "Vpc"
         },
-        "CidrBlock": "10.26.1.0/24",
+        "CidrBlock": "10.26.3.0/24",
         "AvailabilityZone": {
           "Fn::Select": [
             "1", {
@@ -47,7 +47,7 @@
         }
       }
     },
-    "InternetGateway": {
+    "Gateway": {
       "Type": "AWS::EC2::InternetGateway",
       "Metadata": {
         "AWS::CloudFormation::Designer": {
@@ -62,7 +62,50 @@
           "Ref": "Vpc"
         },
         "InternetGatewayId": {
-          "Ref": "InternetGateway"
+          "Ref": "Gateway"
+        }
+      }
+    },
+    "RouteThroughGateway": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        }
+      }
+    },
+    "PublicRoute": {
+      "Type": "AWS::EC2::Route",
+      "DependsOn": "AttachGateway",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "RouteThroughGateway"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "Gateway"
+        }
+      }
+    },
+    "PubSubnetAz1Route": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "PubSubnetAz1"
+        },
+        "RouteTableId": {
+          "Ref": "RouteThroughGateway"
+        }
+      }
+    },
+    "PubSubnetAz2Route": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "PubSubnetAz2"
+        },
+        "RouteTableId": {
+          "Ref": "RouteThroughGateway"
         }
       }
     }
