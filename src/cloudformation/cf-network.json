@@ -11,13 +11,13 @@
         "EnableDnsHostnames": "true"
       }
     },
-    "PubSubnetAz1": {
+    "ContainerSubnetAz1": {
       "Type": "AWS::EC2::Subnet",
       "Properties": {
         "VpcId": {
           "Ref": "Vpc"
         },
-        "CidrBlock": "10.26.2.0/24",
+        "CidrBlock": "10.26.6.0/24",
         "AvailabilityZone": {
           "Fn::Select": [
             "0", {
@@ -29,13 +29,13 @@
         }
       }
     },
-    "PubSubnetAz2": {
+    "ContainerSubnetAz2": {
       "Type": "AWS::EC2::Subnet",
       "Properties": {
         "VpcId": {
           "Ref": "Vpc"
         },
-        "CidrBlock": "10.26.3.0/24",
+        "CidrBlock": "10.26.7.0/24",
         "AvailabilityZone": {
           "Fn::Select": [
             "1", {
@@ -87,26 +87,44 @@
         }
       }
     },
-    "PubSubnetAz1Route": {
+    "ContainerSubnetAz1Route": {
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
       "Properties": {
         "SubnetId": {
-          "Ref": "PubSubnetAz1"
+          "Ref": "ContainerSubnetAz1"
         },
         "RouteTableId": {
           "Ref": "RouteThroughGateway"
         }
       }
     },
-    "PubSubnetAz2Route": {
+    "ContainerSubnetAz2Route": {
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
       "Properties": {
         "SubnetId": {
-          "Ref": "PubSubnetAz2"
+          "Ref": "ContainerSubnetAz2"
         },
         "RouteTableId": {
           "Ref": "RouteThroughGateway"
         }
+      }
+    }
+  },
+  "Outputs": {
+    "VPC": {
+      "Description": "VPC ID",
+      "Value": {
+        "Ref": "Vpc"
+      }
+    },
+    "ContainerSubnets": {
+      "Description": "Container Subnet IDs",
+      "Value": {
+        "Fn::Join": [",", [{
+          "Ref": "ContainerSubnetAz1"
+        }, {
+          "Ref": "ContainerSubnetAz2"
+        }]]
       }
     }
   }
