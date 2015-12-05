@@ -119,7 +119,7 @@
       }
     },
 
-    "ContainerInstanceLC": {
+    "ContainerInstanceConfiguration": {
       "Type": "AWS::AutoScaling::LaunchConfiguration",
       "Properties": {
         "ImageId": {
@@ -131,8 +131,12 @@
           "Fn::FindInMap": ["Constant", "Value", "EcsInstanceType"]
         },
         "AssociatePublicIpAddress": true,
-        "IamInstanceProfile": "ecsInstanceRole",
-        "KeyName": "testing-20151124",
+        "IamInstanceProfile": {
+          "Fn::FindInMap": ["Constant", "Value", "EcsInstanceProfile"]
+        },
+        "KeyName": {
+          "Fn::FindInMap": ["Constant", "Value", "EcsKeypairName"]
+        },
         "SecurityGroups": [{
           "Ref": "EcsSecurityGroup"
         }],
@@ -149,7 +153,31 @@
       }
     },
 
-
+    "ContainerInstanceScalingGroup": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "VPCZoneIdentifier": [{
+          "Ref": "ContainerSubnetAz1"
+        }, {
+          "Ref": "ContainerSubnetAz2"
+        }],
+        "LaunchConfigurationName": {
+          "Ref": "ContainerInstanceConfiguration"
+        },
+        "MinSize": 1,
+        "MaxSize": 2,
+        "DesiredCapacity": 1,
+        "Tags": [{
+          "Key": "Name",
+          "Value": {
+            "Fn::Join": ["", ["ECS Instance - ", {
+              "Ref": "AWS::StackName"
+            }]]
+          },
+          "PropagateAtLaunch": "true"
+        }]
+      }
+    },
 
     "EcsSecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
@@ -196,7 +224,9 @@
   "Mappings": {
     "Constant": {
       "Value": {
-        "EcsInstanceType": "t2.micro"
+        "EcsInstanceType": "t2.micro",
+        "EcsInstanceProfile": "ecsInstanceRole",
+        "EcsKeypairName": "testing-20151124"
       }
     },
 
