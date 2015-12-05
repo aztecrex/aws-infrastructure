@@ -3,13 +3,6 @@
   "Description": "Container-based Infrastructure",
   "Parameters": {
 
-    "EcsClusterName": {
-      "Type": "String",
-      "Description": "ECS Cluster Name",
-      "Default": "sample-web"
-    }
-
-
   },
   "Resources": {
     "Vpc": {
@@ -119,6 +112,10 @@
       }
     },
 
+    "ContainerCluster": {
+      "Type": "AWS::ECS::Cluster"
+    },
+
     "ContainerInstanceConfiguration": {
       "Type": "AWS::AutoScaling::LaunchConfiguration",
       "Properties": {
@@ -145,7 +142,7 @@
             "Fn::Join": ["", [
               "#!/bin/bash\n",
               "echo ECS_CLUSTER=", {
-                "Ref": "EcsClusterName"
+                "Ref": "ContainerCluster"
               }, " >> /etc/ecs/ecs.config"
             ]]
           }
