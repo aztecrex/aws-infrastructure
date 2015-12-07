@@ -1,0 +1,19 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "HTTP Service",
+
+  "Resources": {
+    "Task": {
+      "Type": "AWS::ECS::TaskDefinition",
+      "Properties": {
+        "ContainerDefinitions": [{
+          "Name": "http-server",
+          "Image": "httpd:2.4",
+          "Memory": 128,
+          "Cpu": 10
+        }],
+        "Volumes": []
+      }
+    }
+  }
+}
