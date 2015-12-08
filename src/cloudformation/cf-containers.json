@@ -251,6 +251,14 @@
   },
 
   "Outputs": {
+    
+    "Cluster" : {
+      "Description" : "Cluster Name",
+      "Value": {
+        "Ref": "ContainerCluster"
+      }
+    },
+
     "VPC": {
       "Description": "VPC ID",
       "Value": {
