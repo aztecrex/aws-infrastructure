@@ -1,0 +1,51 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "HTTP Service",
+
+  "Parameters": {
+
+    "ClusterName": {
+      "Type": "String",
+      "Default": "default",
+      "Description": "The cluster on which to deploy the service."
+    }
+
+  },
+
+  "Resources": {
+
+    "Service": {
+      "Type": "AWS::ECS::Service",
+      "Properties": {
+        "Cluster": {
+          "Ref": "ClusterName"
+        },
+        "DesiredCount": 1,
+        "TaskDefinition": {
+          "Ref": "Task"
+        }
+      }
+    },
+
+    "Task": {
+      "Type": "AWS::ECS::TaskDefinition",
+      "Properties": {
+        "ContainerDefinitions": [{
+          "Name": "http-server",
+          "Image": "httpd:2.4",
+          "Memory": 128,
+          "Cpu": 10,
+          "EntryPoint": ["sh","-c"],
+          "Command": [
+            "/bin/sh -c \"echo '<html> <head> <title>We Rule</title> <style>body {margin-top: 40px; background-color: #333;} </style> </head><body> <div style=color:white;text-align:center> <h1>Complicated Application</h1> <h2>Look!</h2> <p>CJ Is in a container!</p> </div></body></html>' >  /usr/local/apache2/htdocs/index.html && httpd-foreground\""
+          ],
+          "PortMappings": [{
+            "ContainerPort": 80,
+            "HostPort": 80
+          }]
+        }],
+        "Volumes": []
+      }
+    }
+  }
+}

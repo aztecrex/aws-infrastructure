@@ -1,0 +1,279 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Container-based Infrastructure",
+  "Parameters": {
+
+  },
+  "Resources": {
+    "Vpc": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "10.26.0.0/16",
+        "EnableDnsSupport": "true",
+        "EnableDnsHostnames": "true"
+      }
+    },
+    "ContainerSubnetAz1": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "CidrBlock": "10.26.6.0/24",
+        "AvailabilityZone": {
+          "Fn::Select": [
+            "0", {
+              "Fn::GetAZs": {
+                "Ref": "AWS::Region"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ContainerSubnetAz2": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "CidrBlock": "10.26.7.0/24",
+        "AvailabilityZone": {
+          "Fn::Select": [
+            "1", {
+              "Fn::GetAZs": {
+                "Ref": "AWS::Region"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Gateway": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "bcac3fdb-165e-4cfa-b61e-d914648a6ed5"
+        }
+      }
+    },
+    "AttachGateway": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "InternetGatewayId": {
+          "Ref": "Gateway"
+        }
+      }
+    },
+    "RouteThroughGateway": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        }
+      }
+    },
+    "PublicRoute": {
+      "Type": "AWS::EC2::Route",
+      "DependsOn": "AttachGateway",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "RouteThroughGateway"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "Gateway"
+        }
+      }
+    },
+    "ContainerSubnetAz1Route": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "ContainerSubnetAz1"
+        },
+        "RouteTableId": {
+          "Ref": "RouteThroughGateway"
+        }
+      }
+    },
+    "ContainerSubnetAz2Route": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "ContainerSubnetAz2"
+        },
+        "RouteTableId": {
+          "Ref": "RouteThroughGateway"
+        }
+      }
+    },
+
+    "ContainerCluster": {
+      "Type": "AWS::ECS::Cluster"
+    },
+
+    "ContainerInstanceConfiguration": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "ImageId": {
+          "Fn::FindInMap": ["Region", {
+            "Ref": "AWS::Region"
+          }, "ami"]
+        },
+        "InstanceType": {
+          "Fn::FindInMap": ["Constant", "Value", "EcsInstanceType"]
+        },
+        "AssociatePublicIpAddress": true,
+        "IamInstanceProfile": {
+          "Fn::FindInMap": ["Constant", "Value", "EcsInstanceProfile"]
+        },
+        "KeyName": {
+          "Fn::FindInMap": ["Constant", "Value", "EcsKeypairName"]
+        },
+        "SecurityGroups": [{
+          "Ref": "EcsSecurityGroup"
+        }],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": ["", [
+              "#!/bin/bash\n",
+              "echo ECS_CLUSTER=", {
+                "Ref": "ContainerCluster"
+              }, " >> /etc/ecs/ecs.config"
+            ]]
+          }
+        }
+      }
+    },
+
+    "ContainerInstanceScalingGroup": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "VPCZoneIdentifier": [{
+          "Ref": "ContainerSubnetAz1"
+        }, {
+          "Ref": "ContainerSubnetAz2"
+        }],
+        "LaunchConfigurationName": {
+          "Ref": "ContainerInstanceConfiguration"
+        },
+        "MinSize": 1,
+        "MaxSize": 2,
+        "DesiredCapacity": 1,
+        "Tags": [{
+          "Key": "Name",
+          "Value": {
+            "Fn::Join": ["", ["ECS Instance - ", {
+              "Ref": "AWS::StackName"
+            }]]
+          },
+          "PropagateAtLaunch": "true"
+        }]
+      }
+    },
+
+    "EcsSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "ECS Allowed Ports",
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "SecurityGroupIngress": [{
+          "IpProtocol": "tcp",
+          "FromPort": "80",
+          "ToPort": "80",
+          "CidrIp": "0.0.0.0/0"
+        }, {
+          "IpProtocol": "tcp",
+          "FromPort": "1",
+          "ToPort": "65535",
+          "SourceSecurityGroupId": {
+            "Ref": "ElbSecurityGroup"
+          }
+        }]
+      }
+    },
+
+    "ElbSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "ELB Allowed Ports",
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "SecurityGroupIngress": [{
+          "IpProtocol": "tcp",
+          "FromPort": "80",
+          "ToPort": "80",
+          "CidrIp": "0.0.0.0/0"
+        }]
+      }
+    }
+
+
+  },
+
+  "Mappings": {
+    "Constant": {
+      "Value": {
+        "EcsInstanceType": "t2.micro",
+        "EcsInstanceProfile": "ecsInstanceRole",
+        "EcsKeypairName": "testing-20151124"
+      }
+    },
+
+    "Region": {
+      "us-east-1": {
+        "ami": "ami-ddc7b6b7"
+      },
+      "us-west-1": {
+        "ami": "ami-a39df1c3"
+      },
+      "us-west-2": {
+        "ami": "ami-d74357b6"
+      },
+      "eu-west-1": {
+        "ami": "ami-f1b46b82"
+      },
+      "ap-northeast-1": {
+        "ami": "ami-3077525e"
+      },
+      "ap-southeast-2": {
+        "ami": "ami-23b4eb40"
+      }
+    }
+
+  },
+
+  "Outputs": {
+    
+    "Cluster" : {
+      "Description" : "Cluster Name",
+      "Value": {
+        "Ref": "ContainerCluster"
+      }
+    },
+
+    "VPC": {
+      "Description": "VPC ID",
+      "Value": {
+        "Ref": "Vpc"
+      }
+    },
+    "ContainerSubnets": {
+      "Description": "Container Subnet IDs",
+      "Value": {
+        "Fn::Join": [",", [{
+          "Ref": "ContainerSubnetAz1"
+        }, {
+          "Ref": "ContainerSubnetAz2"
+        }]]
+      }
+    }
+  }
+}
