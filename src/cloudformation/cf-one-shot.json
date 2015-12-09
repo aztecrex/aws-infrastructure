@@ -1,0 +1,41 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "On-demand Task",
+
+  "Parameters": {
+
+    "ClusterName": {
+      "Type": "String",
+      "Default": "default",
+      "Description": "The cluster on which to run the task."
+    }
+
+  },
+
+  "Resources": {
+
+    "Task30": {
+      "Type": "AWS::ECS::TaskDefinition",
+      "Properties": {
+        "ContainerDefinitions": [{
+          "Name": "short-task",
+          "Image": "aztecrex/cj-task-30",
+          "Memory": 32,
+          "Cpu": 5
+        }],
+        "Volumes": []
+      }
+    }
+  },
+
+  "Outputs": {
+
+    "ShortTask" : {
+      "Description" : "A 30-second task",
+      "Value": {
+        "Ref": "Task30"
+      }
+    }
+
+  }
+}
