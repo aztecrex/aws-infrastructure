@@ -19,7 +19,7 @@
       "Properties": {
         "ContainerDefinitions": [{
           "Name": "short-task",
-          "Image": "aztecrex/cj-task-30",
+          "Image": "aztecrex/cj-task-30:latest",
           "Environment": [{
             "Name": "TARGET_PHONE",
             "Value": "8052178602"
