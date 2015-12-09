@@ -20,10 +20,6 @@
         "ContainerDefinitions": [{
           "Name": "short-task",
           "Image": "aztecrex/cj-task-30:latest",
-          "Environment": [{
-            "Name": "TARGET_PHONE",
-            "Value": "8052178602"
-          }],
           "Memory": 32,
           "Cpu": 5
         }],

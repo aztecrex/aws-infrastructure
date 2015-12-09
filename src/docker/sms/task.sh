@@ -1,6 +1,6 @@
 #!/bin/bash
 
-dest=$TARGET_PHONE
+dest=$1
 
 . /functions.sh
 
