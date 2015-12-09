@@ -32,13 +32,9 @@
       "Properties": {
         "ContainerDefinitions": [{
           "Name": "http-server",
-          "Image": "httpd:2.4",
+          "Image": "aztecrex/cj-httpd:latest",
           "Memory": 128,
           "Cpu": 10,
-          "EntryPoint": ["sh","-c"],
-          "Command": [
-            "/bin/sh -c \"echo '<html> <head> <title>We Rule</title> <style>body {margin-top: 40px; background-color: #333;} </style> </head><body> <div style=color:white;text-align:center> <h1>Complicated Application</h1> <h2>Look!</h2> <p>CJ Is in a container!</p> </div></body></html>' >  /usr/local/apache2/htdocs/index.html && httpd-foreground\""
-          ],
           "PortMappings": [{
             "ContainerPort": 80,
             "HostPort": 80
