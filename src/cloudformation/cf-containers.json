@@ -251,7 +251,7 @@
   },
 
   "Outputs": {
-    
+
     "Cluster" : {
       "Description" : "Cluster Name",
       "Value": {
