@@ -67,6 +67,23 @@ teardown-demo-task() {
 }
 
 
+run-demo-task() {
+  temp=$(aws cloudformation describe-stacks \
+       --query 'Stacks[?StackName==`demo-cluster`] | [0].Outputs[?OutputKey==`Cluster`].OutputValue | [0]' )
+  temp="${temp%\"}"
+  temp="${temp#\"}"
+  cluster=$temp
+
+  temp=$(aws cloudformation describe-stacks \
+       --query 'Stacks[?StackName==`demo-task`] | [0].Outputs[?OutputKey==`ShortTask`].OutputValue | [0]' )
+  temp="${temp%\"}"
+  temp="${temp#\"}"
+  task=$temp
+
+  aws ecs run-task --task-definition "$task" --cluster "$cluster" --overrides '{"containerOverrides": [{"name":"short-task","command":["8052178602"]}]}'
+}
+
+
 if [ "$DEMO_ROOT" = "" ]; then
   echo "DEMO_ROOT must be set before running demo-commands."
 else
