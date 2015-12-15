@@ -68,6 +68,9 @@ teardown-demo-task() {
 
 
 run-demo-task() {
+
+  phone=$1
+  if [ "$phone" = "" ]; then phone='8052178602'; fi
   temp=$(aws cloudformation describe-stacks \
        --query 'Stacks[?StackName==`demo-cluster`] | [0].Outputs[?OutputKey==`Cluster`].OutputValue | [0]' )
   temp="${temp%\"}"
@@ -80,7 +83,10 @@ run-demo-task() {
   temp="${temp#\"}"
   task=$temp
 
-  aws ecs run-task --task-definition "$task" --cluster "$cluster" --overrides '{"containerOverrides": [{"name":"short-task","command":["8052178602"]}]}'
+  ovr='{"containerOverrides": [{"name":"short-task","command":["'"$phone"'"]}]}'
+
+  echo $ovr
+  aws ecs run-task --task-definition "$task" --cluster "$cluster" --overrides "$ovr"
 }
 
 
